@@ -1,6 +1,7 @@
 import { Layout } from '@components/Layout'
 import { getPlantList } from '@api'
 import { PlantCollection } from '@components/PlantCollection'
+import {  Hero } from '@components/Hero'
 import { GetStaticProps, InferGetStaticPropsType } from 'next'
 
 
@@ -21,7 +22,9 @@ export default function Home({ plants }:InferGetStaticPropsType<typeof getStatic
 
   return (
     <Layout>
-      <PlantCollection plants={plants} variant="square" className=""/>
+      <Hero {...plants[0]} className='mb-48'/>
+      <PlantCollection plants={plants.slice(0, 2)} variant="vertical" className='mb-48'/>
+      <PlantCollection plants={plants} variant="square"/>
     </Layout>
   )
 }
