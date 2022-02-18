@@ -1,42 +1,63 @@
 
-import { useState, useEffect } from "react";
 import { Layout } from "@components/Layout";
 import { RichText } from "@components/RichText";
 import { Grid } from "@ui/Grid";
 import { Typography } from "@ui/Typography";
 import { AuthorCard } from "@components/AuthorCard";
-import { useRouter } from "next/router";
-import { getPlant, QueryStatus } from "@api";
+import { getPlant, getPlantList } from "@api";
+import { GetStaticProps, InferGetStaticPropsType } from "next";
 
-export default function DetailPage(){
-    const [ plant, setPlant ] = useState<Plant | null>(null);
-    const [status, setStatus] = useState<QueryStatus>("idle")
-    const router = useRouter();
-    
-    const slug = router.query.slug;
-    console.log(slug)
+type PlantEntryProps = {
+    plant: Plant
+}
 
-    useEffect(() => {
-        if(typeof slug !== "string"){
-            return;
+type PathType = {
+    params: {
+        slug: string
+    }
+}
+
+export const getStaticPaths = async () => {
+    const entries = await getPlantList({limit: 10});
+
+    const paths:PathType[] = entries.map(item => ({
+        params: {
+            slug: item.slug,
         }
+    }))
 
-        setStatus("loading");
-        getPlant(slug).then(res => {
-            setPlant(res);
-            setStatus("success");
-        }).catch(err => {
-            setStatus("error");
-        })
-    },[slug])
+    return {
+        paths,
+        fallback: false // mirar bien esto dsp
+    }
+}
 
-    if(status === "loading" || status === "idle"){
-        return <Layout>Cargando plantitas...</Layout>
+
+export const getStaticProps:GetStaticProps<PlantEntryProps> = async({params}) => {
+    const slug = params?.slug;
+
+    if(typeof slug !== "string"){
+        return {
+            notFound: true // gentileza de next: plant así jamás será null
+        }
     }
 
-    if(plant === null){
-        return <Layout>Oooops 404</Layout>
+    try {
+        const plant = await getPlant(slug);
+        return {
+            props: {
+                plant
+            }
+        }
+    } catch (err) {
+        return {
+            notFound: true
+        }
     }
+}
+
+
+export default function DetailPage({plant}:InferGetStaticPropsType<typeof getStaticProps>){
 
     return <Layout>
         <Grid container spacing={4}>
