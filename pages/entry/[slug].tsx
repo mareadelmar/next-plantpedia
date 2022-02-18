@@ -1,27 +1,42 @@
 
+import { useState, useEffect } from "react";
 import { Layout } from "@components/Layout";
 import { RichText } from "@components/RichText";
 import { Grid } from "@ui/Grid";
 import { Typography } from "@ui/Typography";
 import { AuthorCard } from "@components/AuthorCard";
+import { useRouter } from "next/router";
+import { getPlant, QueryStatus } from "@api";
 
 export default function DetailPage(){
-    const plant = {
-        image: {
-            url: ""
-        },
-        plantName: "",
-        description: "",
-        author: {
-            fullName: "",
-            id: "",
-            photo: null,
-            linkedIn: "",
-            twitter: "",
-            biography: "",
-            handle: ""
+    const [ plant, setPlant ] = useState<Plant | null>(null);
+    const [status, setStatus] = useState<QueryStatus>("idle")
+    const router = useRouter();
+    
+    const slug = router.query.slug;
+    console.log(slug)
+
+    useEffect(() => {
+        if(typeof slug !== "string"){
+            return;
         }
-    };
+
+        setStatus("loading");
+        getPlant(slug).then(res => {
+            setPlant(res);
+            setStatus("success");
+        }).catch(err => {
+            setStatus("error");
+        })
+    },[slug])
+
+    if(status === "loading" || status === "idle"){
+        return <Layout>Cargando plantitas...</Layout>
+    }
+
+    if(plant === null){
+        return <Layout>Oooops 404</Layout>
+    }
 
     return <Layout>
         <Grid container spacing={4}>
